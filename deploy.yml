@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+  authdb:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    restart: always
+    ports:
+      - 1433:1433
+    environment:
+      ACCEPT_EULA: Y
+      MSSQL_SA_PASSWORD: ECUtbildning2022!
+    volumes:
+      - ./volumes/AuthDB:/var/opt/mssql/data
+
+  authservice:
+    image: authservice
+    restart: always
+    ports:
+      - 3000:80
+    depends_on:
+      - authdb
