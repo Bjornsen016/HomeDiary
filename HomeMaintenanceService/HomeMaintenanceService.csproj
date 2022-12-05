@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UserSecretsId>f08c9d5c-90eb-4697-9467-174fe8bc6ce5</UserSecretsId>
+		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Google.Protobuf" Version="3.21.10" />
+		<PackageReference Include="Grpc.Net.Client" Version="2.50.0" />
+		<PackageReference Include="Grpc.Tools" Version="2.50.0">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.17.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Protobuf Include="Protos\expenses-service.proto" GrpcServices="Client" />
+	</ItemGroup>
+
+		</Project>

@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UserSecretsId>9762e7ac-2baa-40cd-9c56-978fcbf6e915</UserSecretsId>
+		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Grpc.AspNetCore" Version="2.49.0" />
+		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.17.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Protobuf Include="Protos\expenses-service.proto" GrpcServices="Server" />
+	</ItemGroup>
+
+</Project>
