@@ -61,4 +61,10 @@ app.MapPost("/login", async (UserLogin userLogin, AuthDbContext db) =>
     return Results.Ok(tokenString);
 });
 
+app.MapGet("/user/{id}", async (Guid id, AuthDbContext db) =>
+{
+    var user = await db.FindAsync<User>(id);
+    return user is null ? Results.NotFound("User not found") : Results.Ok(user);
+});
+
 app.Run();

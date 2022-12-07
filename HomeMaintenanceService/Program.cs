@@ -13,6 +13,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<HomeDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddHttpClient<HttpClient>("AuthClient", client => client.BaseAddress = new Uri("http://authservice"));
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -48,13 +50,17 @@ app.UseAuthorization();
 // Configure the HTTP request pipeline.
 
 app.MapPost("/HomeTask", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-async (HomeTaskDto homeTask, HomeDbContext db, HttpContext http) =>
+async (HomeTaskDto homeTask, HomeDbContext db, HttpContext http, IHttpClientFactory iHttpClientFactory) =>
     {
         if (homeTask is null) return Results.BadRequest("Please include correct data");
 
         var userId = http.User.Claims
             .FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)
             ?.Value;
+
+        var client = iHttpClientFactory.CreateClient("AuthClient");
+        var exists = await client.GetAsync($"/user/{userId}");
+        if (!exists.IsSuccessStatusCode) return Results.NotFound($"User with id: {userId} not found. Can't create a task.");
 
         var task = new HomeTask
         {
@@ -79,10 +85,8 @@ async (HomeTaskDto homeTask, HomeDbContext db, HttpContext http) =>
     });
 
 app.MapGet("/HomeTask/{taskId}", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-async (Guid? taskId, HomeDbContext db) =>
+async (Guid taskId, HomeDbContext db) =>
     {
-        if (taskId is null) return Results.BadRequest("Please include correct data");
-
         var task = await db.HomeTasks.FindAsync(taskId);
         if (task is null)
             return Results.NotFound(
@@ -91,8 +95,41 @@ async (Guid? taskId, HomeDbContext db) =>
         return Results.Ok(task);
     });
 
+app.MapGet("/HomeTask/", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+async (HomeDbContext db) =>
+    {
+        var taskList = await db.HomeTasks.ToListAsync();
+        return taskList.IsNullOrEmpty() ? Results.NotFound($"No tasks was found!") : Results.Ok(taskList);
+    });
+
+app.MapGet("/HomeTask/Category/{category}", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+async (string? category, HomeDbContext db) =>
+    {
+        var taskList = await db.HomeTasks.Where(t => t.Category.ToUpper().Equals(category.ToUpper()))
+            .ToListAsync();
+
+        if (taskList.IsNullOrEmpty())
+            return Results.NotFound(
+                $"No task in {category} was found!");
+
+        return Results.Ok(taskList);
+    });
+
+app.MapGet("/HomeTask/Category", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+async (HomeDbContext db) =>
+    {
+        var categoryList =
+            await db.HomeTasks.Select(c => c.Category).ToListAsync();
+
+        if (categoryList.IsNullOrEmpty())
+            return Results.NotFound(
+                $"No categories were found!");
+
+        return Results.Ok(categoryList);
+    });
+
 app.MapPut("/HomeTask/{taskId}", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-async (Guid? taskId, HomeTaskDto? updatedHomeTask, HomeDbContext db) =>
+async (Guid? taskId, HomeTaskDto? updatedHomeTask, HomeDbContext db, HttpContext http) =>
     {
         if (taskId is null || updatedHomeTask is null) return Results.BadRequest("Please include correct data");
 
@@ -100,6 +137,11 @@ async (Guid? taskId, HomeTaskDto? updatedHomeTask, HomeDbContext db) =>
         if (task is null)
             return Results.BadRequest(
                 "Home task not found, please check task Id");
+
+        var userId = http.User.Claims
+            .FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)
+            ?.Value;
+        if (userId != task.UserId) return Results.Unauthorized();
 
         task.Name = updatedHomeTask.Name;
         task.Category = updatedHomeTask.Category;
@@ -111,13 +153,20 @@ async (Guid? taskId, HomeTaskDto? updatedHomeTask, HomeDbContext db) =>
     });
 
 app.MapDelete("/HomeTask/{taskId}", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-async (Guid? taskId, HomeDbContext db) =>
+async (Guid? taskId, HomeDbContext db, HttpContext http) =>
     {
         if (taskId is null) return Results.BadRequest("Please include correct data");
+
+        var userId = http.User.Claims
+            .FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)
+            ?.Value;
 
         var task = await db.HomeTasks.FindAsync(taskId);
         if (task is null)
             return Results.NotFound($"Todo-id:{taskId} not found in database, check id and try again.");
+
+        if (task.UserId != userId) return Results.Unauthorized();
+
         db.HomeTasks.Remove(task);
         await db.SaveChangesAsync();
 
