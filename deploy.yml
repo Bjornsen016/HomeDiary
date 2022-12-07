@@ -12,6 +12,17 @@ services:
     volumes:
       - ./volumes/AuthDB:/var/opt/mssql/data
 
+  homedb:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    restart: always
+    ports:
+      - 1434:1433
+    environment:
+      ACCEPT_EULA: Y
+      MSSQL_SA_PASSWORD: ECUtbildning2022!
+    volumes:
+      - ./volumes/HomeDB:/var/opt/mssql/data
+
   authservice:
     image: authservice
     restart: always
@@ -19,3 +30,11 @@ services:
       - 3000:80
     depends_on:
       - authdb
+
+  homeservise:
+    image: homeservice
+    restart: always
+    ports:
+      - 3001:80
+    depends_on:
+      - homedb  
