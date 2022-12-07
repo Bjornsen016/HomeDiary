@@ -5,6 +5,7 @@ namespace HomeMaintenanceService.Model
 {
     public class HomeTask
     {
+        [Key]
         public Guid Id { get; set; }
         [Required]
         public string Name { get; set; }
@@ -15,6 +16,8 @@ namespace HomeMaintenanceService.Model
         public List<Note>? NotesList { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; }
+        [Required]
+        public string UserId { get; set; }
     }
 
     public class Note

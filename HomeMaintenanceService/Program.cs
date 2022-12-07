@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,7 +26,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
 
         };
-
         options.SaveToken = true;
     });
 
@@ -48,22 +48,27 @@ app.UseAuthorization();
 // Configure the HTTP request pipeline.
 
 app.MapPost("/HomeTask", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-async (HomeTaskDto homeTask, HomeDbContext db) =>
+async (HomeTaskDto homeTask, HomeDbContext db, HttpContext http) =>
     {
         if (homeTask is null) return Results.BadRequest("Please include correct data");
 
-        var task = new HomeTask();
+        var userId = http.User.Claims
+            .FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)
+            ?.Value;
 
-        task.Name = homeTask.Name;
-        task.Category = homeTask.Category;
-        task.Description = homeTask.Description;
-        task.NotesList = homeTask.NotesList.Select(note => new Note() { Text = note }).ToList();
+        var task = new HomeTask
+        {
+            Name = homeTask.Name,
+            Category = homeTask.Category,
+            Description = homeTask.Description,
+            NotesList = homeTask.NotesList.Select(note => new Note() { Text = note }).ToList(),
+            UserId = userId
+        };
 
         try
         {
             db.HomeTasks.Add(task);
             await db.SaveChangesAsync();
-
             return Results.Created($"/HomeTask/{task.Id}", "Home task added successfully!");
         }
         catch (Exception ex)
