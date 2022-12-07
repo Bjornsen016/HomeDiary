@@ -1,6 +1,16 @@
 version: "3.9"
 
 services:
+
+  traefik:
+    image: traefik:v2.9
+    command: --api.insecure=true --providers.docker
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
   authdb:
     image: mcr.microsoft.com/mssql/server:2022-latest
     restart: always
@@ -30,6 +40,9 @@ services:
       - 3000:80
     depends_on:
       - authdb
+      - traefik
+    labels:
+      - "traefik.http.routers.authservice.rule=Host(`auth.localhost`)"
 
   homeservise:
     image: homeservice
@@ -37,4 +50,7 @@ services:
     ports:
       - 3001:80
     depends_on:
-      - homedb  
+      - homedb
+      - traefik
+    labels:
+      - "traefik.http.routers.homeservise.rule=Host(`hometask.localhost`)"
