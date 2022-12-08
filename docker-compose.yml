@@ -34,7 +34,7 @@ services:
       - ./volumes/HomeDB:/var/opt/mssql/data
 
   authservice:
-    image: authservice
+    image: bjornsen016/authservice
     restart: always
     ports:
       - 3000:80
@@ -44,8 +44,8 @@ services:
     labels:
       - "traefik.http.routers.authservice.rule=Host(`auth.localhost`)"
 
-  homeservise:
-    image: homeservice
+  homeservice:
+    image: bjornsen016/homeservice
     restart: always
     ports:
       - 3001:80
@@ -53,4 +53,4 @@ services:
       - homedb
       - traefik
     labels:
-      - "traefik.http.routers.homeservise.rule=Host(`hometask.localhost`)"
+      - "traefik.http.routers.homeservice.rule=Host(`hometask.localhost`)"
