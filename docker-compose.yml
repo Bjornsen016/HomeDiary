@@ -33,6 +33,17 @@ services:
     volumes:
       - ./volumes/HomeDB:/var/opt/mssql/data
 
+  expensedb:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    restart: always
+    ports:
+      - 1435:1433
+    environment:
+      ACCEPT_EULA: Y
+      MSSQL_SA_PASSWORD: ECUtbildning2022!
+    volumes:
+      - ./volumes/ExpenseDB:/var/opt/mssql/data
+
   authservice:
     image: bjornsen016/authservice
     restart: always
@@ -54,3 +65,14 @@ services:
       - traefik
     labels:
       - "traefik.http.routers.homeservice.rule=Host(`hometask.localhost`)"
+    
+  expenseservice:
+    image: bjornsen016/expenseservice
+    restart: always
+    ports:
+      - 3002:80
+    depends_on:
+      - expensedb
+      - traefik
+    labels:
+      - "traefik.http.routers.expenseservice.rule=Host(`expense.localhost`)"

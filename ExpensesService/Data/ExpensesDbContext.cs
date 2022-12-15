@@ -7,6 +7,6 @@ namespace ExpensesService.Data
     {
         public ExpensesDbContext(DbContextOptions options) : base(options) { }
 
-        public DbSet<Expanse>? Expenses { get; set; }
+        public DbSet<Expense>? Expenses { get; set; }
     }
 }

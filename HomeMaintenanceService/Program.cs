@@ -25,7 +25,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("Missing key")))
 
         };
         options.SaveToken = true;
@@ -50,7 +50,7 @@ app.UseAuthorization();
 // Configure the HTTP request pipeline.
 
 app.MapPost("/HomeTask", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-async (HomeTaskDto homeTask, HomeDbContext db, HttpContext http, IHttpClientFactory iHttpClientFactory) =>
+async (NewHomeTask homeTask, HomeDbContext db, HttpContext http, IHttpClientFactory iHttpClientFactory) =>
     {
         if (homeTask is null) return Results.BadRequest("Please include correct data");
 
@@ -85,9 +85,13 @@ async (HomeTaskDto homeTask, HomeDbContext db, HttpContext http, IHttpClientFact
     });
 
 app.MapGet("/HomeTask/{taskId}", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-async (Guid taskId, HomeDbContext db) =>
+async (Guid taskId, HomeDbContext db, HttpContext http) =>
     {
-        var task = await db.HomeTasks.FindAsync(taskId);
+        var userId = http.User.Claims
+            .FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)
+            ?.Value;
+
+        var task = await db.HomeTasks.FirstOrDefaultAsync(t => t.Id == taskId && t.UserId == userId);
         if (task is null)
             return Results.NotFound(
                 "Home task not found, please check task Id");
@@ -96,16 +100,25 @@ async (Guid taskId, HomeDbContext db) =>
     });
 
 app.MapGet("/HomeTask/", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-async (HomeDbContext db) =>
+async (HomeDbContext db, HttpContext http) =>
     {
-        var taskList = await db.HomeTasks.ToListAsync();
+        var userId = http.User.Claims
+            .FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)
+            ?.Value;
+
+        var taskList = await db.HomeTasks.Where(t => t.UserId == userId).ToListAsync();
         return taskList.IsNullOrEmpty() ? Results.NotFound($"No tasks was found!") : Results.Ok(taskList);
     });
 
 app.MapGet("/HomeTask/Category/{category}", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-async (string? category, HomeDbContext db) =>
+async (string? category, HomeDbContext db, HttpContext http) =>
     {
-        var taskList = await db.HomeTasks.Where(t => t.Category.ToUpper().Equals(category.ToUpper()))
+        var userId = http.User.Claims
+            .FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)
+            ?.Value;
+
+        var taskList = await db.HomeTasks
+            .Where(t => category != null && t.Category.ToUpper().Equals(category.ToUpper()) && t.UserId == userId)
             .ToListAsync();
 
         if (taskList.IsNullOrEmpty())
@@ -129,9 +142,9 @@ async (HomeDbContext db) =>
     });
 
 app.MapPut("/HomeTask/{taskId}", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-async (Guid? taskId, HomeTaskDto? updatedHomeTask, HomeDbContext db, HttpContext http) =>
+async (Guid? taskId, NewHomeTask? newHomeTask, HomeDbContext db, HttpContext http) =>
     {
-        if (taskId is null || updatedHomeTask is null) return Results.BadRequest("Please include correct data");
+        if (taskId is null || newHomeTask is null) return Results.BadRequest("Please include correct data");
 
         var task = await db.HomeTasks.FindAsync(taskId);
         if (task is null)
@@ -143,10 +156,10 @@ async (Guid? taskId, HomeTaskDto? updatedHomeTask, HomeDbContext db, HttpContext
             ?.Value;
         if (userId != task.UserId) return Results.Unauthorized();
 
-        task.Name = updatedHomeTask.Name;
-        task.Category = updatedHomeTask.Category;
-        task.Description = updatedHomeTask.Description;
-        task.NotesList = updatedHomeTask.NotesList.Select(note => new Note() { Text = note }).ToList();
+        task.Name = newHomeTask.Name;
+        task.Category = newHomeTask.Category;
+        task.Description = newHomeTask.Description;
+        task.NotesList = newHomeTask.NotesList.Select(note => new Note() { Text = note }).ToList();
         task.UpdatedAt = DateTime.UtcNow;
 
         return Results.Ok(task.Name + " updated successfully");
