@@ -45,7 +45,7 @@ services:
       - ./volumes/ExpenseDB:/var/opt/mssql/data
 
   authservice:
-    image: bjornsen016/authservice
+    image: rainbowpaw/authservice
     restart: always
     ports:
       - 3000:80
@@ -56,7 +56,7 @@ services:
       - "traefik.http.routers.authservice.rule=Host(`auth.localhost`)"
 
   homeservice:
-    image: bjornsen016/homeservice
+    image: rainbowpaw/homeservice
     restart: always
     ports:
       - 3001:80
@@ -67,7 +67,7 @@ services:
       - "traefik.http.routers.homeservice.rule=Host(`hometask.localhost`)"
     
   expenseservice:
-    image: bjornsen016/expenseservice
+    image: rainbowpaw/expenseservice
     restart: always
     ports:
       - 3002:80

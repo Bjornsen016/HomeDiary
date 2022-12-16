@@ -10,8 +10,8 @@ namespace ExpensesService.Model
         [Required]
         public string? Category { get; set; }
         [Required]
-        public DateOnly ExpenseDate { get; set; }
-        public DateOnly WarrantyEndDate { get; set; }
+        public DateTime ExpenseDate { get; set; }
+        public DateTime WarrantyEndDate { get; set; }
         public string? ExpenseImageUri { get; set; }
         [Required]
         public string? UserId { get; set; }

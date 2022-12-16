@@ -1,6 +1,5 @@
 using ExpensesService.Data;
 using ExpensesService.Model;
-using ExpensesService.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -38,7 +37,6 @@ builder.Services.AddAuthorization();
 // For instructions on how to configure Kestrel and gRPC clients on macOS, visit https://go.microsoft.com/fwlink/?linkid=2099682
 
 // Add services to the container.
-builder.Services.AddGrpc();
 
 var app = builder.Build();
 
@@ -53,7 +51,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // Configure the HTTP request pipeline.
-app.MapGrpcService<GreeterService>();
 
 app.MapPost("/Expense",
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
