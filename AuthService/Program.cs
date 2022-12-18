@@ -1,14 +1,14 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using AuthService;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddDbContext<AuthDbContext>(opt => opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<AuthDbContext>(opt => opt.UseSqlServer(builder.Configuration.GetConnectionString("AzureConnection")));
 
 var app = builder.Build();
 
@@ -59,6 +59,12 @@ app.MapPost("/login", async (UserLogin userLogin, AuthDbContext db) =>
     var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
     return Results.Ok(tokenString);
+});
+
+app.MapGet("/user/{id}", async (Guid id, AuthDbContext db) =>
+{
+    var user = await db.FindAsync<User>(id);
+    return user is null ? Results.NotFound("User not found") : Results.Ok(user);
 });
 
 app.Run();

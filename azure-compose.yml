@@ -1,0 +1,60 @@
+version: "3.9"
+
+services:
+
+  traefik:
+    image: traefik:v2.9
+    command: --api.insecure=true --providers.docker
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - var/run/docker.sock:/var/run/docker.sock
+
+  #authdb:
+  #  image: mcr.microsoft.com/mssql/server:2022-latest
+  #  restart: always
+  #  ports:
+  #    - 1433:1433
+  #  environment:
+  #    ACCEPT_EULA: Y
+  #    MSSQL_SA_PASSWORD: ECUtbildning2022!
+  #  volumes:
+  #    - ./volumes/AuthDB:/var/opt/mssql/data
+  #
+  #homedb:
+  #  image: mcr.microsoft.com/mssql/server:2022-latest
+  #  restart: always
+  #  ports:
+  #    - 1434:1433
+  #  environment:
+  #    ACCEPT_EULA: Y
+  #    MSSQL_SA_PASSWORD: ECUtbildning2022!
+  #  volumes:
+  #    - ./volumes/HomeDB:/var/opt/mssql/data
+
+  authservice:
+    image: bjornsen016/authserviceazure
+    restart: always
+    ports:
+      - 3000:80
+    depends_on:
+     # - authdb
+      - traefik
+    labels:
+      - "traefik.http.routers.authservice.rule=Host(`auth.homediary.azurewebsites.net`)"
+
+  homeservice:
+    image: bjornsen016/homeserviceazure
+    restart: always
+    ports:
+      - 3001:80
+    depends_on:
+     # - homedb
+      - traefik
+    labels:
+      - "traefik.http.routers.homeservice.rule=Host(`hometask.homediary.azurewebsites.net`)"
+
+volumes:
+  traefic-data:
+    driver: local
