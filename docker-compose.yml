@@ -11,38 +11,38 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
-  authdb:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    restart: always
-    ports:
-      - 1433:1433
-    environment:
-      ACCEPT_EULA: Y
-      MSSQL_SA_PASSWORD: ECUtbildning2022!
-    volumes:
-      - ./volumes/AuthDB:/var/opt/mssql/data
+  #authdb:
+  #  image: mcr.microsoft.com/mssql/server:2022-latest
+  #  restart: always
+  #  ports:
+  #    - 1433:1433
+  #  environment:
+  #    ACCEPT_EULA: Y
+  #    MSSQL_SA_PASSWORD: ECUtbildning2022!
+  #  volumes:
+  #    - ./volumes/AuthDB:/var/opt/mssql/data
 
-  homedb:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    restart: always
-    ports:
-      - 1434:1433
-    environment:
-      ACCEPT_EULA: Y
-      MSSQL_SA_PASSWORD: ECUtbildning2022!
-    volumes:
-      - ./volumes/HomeDB:/var/opt/mssql/data
+  #homedb:
+  #  image: mcr.microsoft.com/mssql/server:2022-latest
+  #  restart: always
+  #  ports:
+  #    - 1434:1433
+  #  environment:
+  #    ACCEPT_EULA: Y
+  #    MSSQL_SA_PASSWORD: ECUtbildning2022!
+  #  volumes:
+  #    - ./volumes/HomeDB:/var/opt/mssql/data
 
-  expensedb:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    restart: always
-    ports:
-      - 1435:1433
-    environment:
-      ACCEPT_EULA: Y
-      MSSQL_SA_PASSWORD: ECUtbildning2022!
-    volumes:
-      - ./volumes/ExpenseDB:/var/opt/mssql/data
+  #expensedb:
+  #  image: mcr.microsoft.com/mssql/server:2022-latest
+  #  restart: always
+  #  ports:
+  #    - 1439:1433
+  #  environment:
+  #    ACCEPT_EULA: Y
+  #    MSSQL_SA_PASSWORD: ECUtbildning2022!
+  #  volumes:
+  #    - ./volumes/ExpenseDB:/var/opt/mssql/data
 
   authservice:
     image: rainbowpaw/authservice
@@ -50,7 +50,7 @@ services:
     ports:
       - 3000:80
     depends_on:
-      - authdb
+  #   - authdb
       - traefik
     labels:
       - "traefik.http.routers.authservice.rule=Host(`auth.localhost`)"
@@ -61,7 +61,7 @@ services:
     ports:
       - 3001:80
     depends_on:
-      - homedb
+  #   - homedb
       - traefik
     labels:
       - "traefik.http.routers.homeservice.rule=Host(`hometask.localhost`)"
@@ -70,9 +70,9 @@ services:
     image: rainbowpaw/expenseservice
     restart: always
     ports:
-      - 3002:80
+      - 3005:80
     depends_on:
-      - expensedb
+  #  - expensedb
       - traefik
     labels:
       - "traefik.http.routers.expenseservice.rule=Host(`expense.localhost`)"

@@ -12,8 +12,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ExpensesDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration
-            .GetConnectionString("DefaultConnection")));
-builder.Services.AddHttpClient<HttpClient>("AuthClient", client => client.BaseAddress = new Uri("http://authservice"));
+            .GetConnectionString("AzureConnection")));
+builder.Services.AddHttpClient<HttpClient>("AuthClient", client => client.BaseAddress = new Uri("https://authservice-app--jpjbmwb.agreeablefield-a48c6a06.eastus.azurecontainerapps.io/"));
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -32,9 +32,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
-
-// Additional configuration is required to successfully run gRPC on macOS.
-// For instructions on how to configure Kestrel and gRPC clients on macOS, visit https://go.microsoft.com/fwlink/?linkid=2099682
 
 // Add services to the container.
 
@@ -87,8 +84,8 @@ async (NewExpense? newExpense, ExpensesDbContext db, HttpContext http, IHttpClie
         }
         catch (Exception ex)
         {
-            return Results.Conflict($"Error: {ex.Message} \n" +
-                                    "Failed to add expense, try again");
+            return Results.Conflict($"Error: {ex.Message}" +
+                                    "\n Failed to add expense, try again");
         }
 
     });
@@ -167,7 +164,7 @@ async (ExpensesDbContext db) =>
     });
 
 
-app.MapPut("/Expanse/{expenseId}",
+app.MapPut("/Expanse/{expenseId}", //endpoint naming wrong, should be "expense"
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 async (Guid? expenseId, NewExpense? newExpense, ExpensesDbContext db, HttpContext http) =>
     {
@@ -197,7 +194,7 @@ async (Guid? expenseId, NewExpense? newExpense, ExpensesDbContext db, HttpContex
 
     });
 
-app.MapDelete("/Expanse/{expenseId}",
+app.MapDelete("/Expanse/{expenseId}", //endpoint naming wrong, should be "expense"
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 async (Guid? expenseId, ExpensesDbContext db, HttpContext http) =>
     {

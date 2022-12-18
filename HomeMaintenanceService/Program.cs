@@ -11,9 +11,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddDbContext<HomeDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("AzureConnection")));
 
-builder.Services.AddHttpClient<HttpClient>("AuthClient", client => client.BaseAddress = new Uri("http://authservice"));
+builder.Services.AddHttpClient<HttpClient>("AuthClient", client => client.BaseAddress = new Uri("https://authservice-app--jpjbmwb.agreeablefield-a48c6a06.eastus.azurecontainerapps.io/"));
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
